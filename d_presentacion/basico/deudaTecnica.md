@@ -41,6 +41,11 @@ Este documento registra los atajos, simplificaciones y compromisos de diseño as
 * **Impacto:** Para ciertos casos de uso es deseable que el LED **siga la detección en tiempo real** (se mantiene encendido mientras el color persiste, y se apaga inmediatamente al detectar "NINGUNO"), en lugar de pulsos de duración fija.
 * **Mitigación:** Agregar un selector de modo en el panel izquierdo ("Modo LED"): `Pulso (timeout firmware)` vs. `Continuo (sigue detección)`. En modo continuo, el heartbeat del `QTimer` de 1 segundo enviaría el color confirmado activo en cada tick, manteniendo el LED activo mientras la detección persista.
 
+### J. Vista HSV — Falso Color en lugar de Viaje de Ida y Vuelta
+* **Descripción:** La pestaña "ESPACIO HSV" actualmente convierte el frame `HSV → BGR` (`cv2.COLOR_HSV2BGR`) antes de mostrarlo, lo que recupera la imagen original y hace que las vistas "Video en Vivo" y "Espacio HSV" se vean prácticamente iguales.
+* **Impacto:** La vista HSV pierde todo su valor diagnóstico. En visión artificial, el espacio HSV se inspecciona en **falso color**: los canales H (matiz, 0–179), S (saturación) y V (valor/brillo) se interpretan directamente como si fueran R, G, B, revelando zonas de bajo matiz, alta saturación y variaciones de luminosidad que no son visibles en la imagen BGR. Esto es clave para ajustar rangos `inRange` visualmente.
+* **Mitigación:** En `camera_thread.py`, reemplazar `cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)` por una conversión de falso color: escalar H de [0–179] a [0–255] y emitir los tres canales H, S, V directamente como imagen RGB. Opcionalmente, mostrar los tres canales en columnas separadas (H | S | V) para mayor granularidad diagnóstica.
+
 ### I. Tema Claro — Dark/Light Toggle (Luna/Sol)
 * **Descripción:** La aplicación solo cuenta con el tema oscuro industrial definido en `styles.py` (`DARK_QSS`). No existe un tema claro alternativo ni un mecanismo para switchear entre ambos en tiempo de ejecución.
 * **Impacto:** En entornos con buena iluminación ambiente (laboratorio con luz natural, proyector) el tema oscuro puede dificultar la lectura. Un tema claro tipo panel de control diurno mejora la usabilidad en esos contextos.
@@ -67,3 +72,4 @@ Este documento registra los atajos, simplificaciones y compromisos de diseño as
 | **G (Modo LED Pulso vs. Continuo)** | Media | ✅ Resuelta | Grupo "MODO LED" en panel izquierdo con botones ⚡ PULSO / ◎ CONTINUO. Heartbeat reenvía color activo cada 1s en modo continuo. |
 | **H (Armonía Visual Layout)** | Baja | ✅ Resuelta | Header 56→58px, log 108→120px, paneles izq 252→265px / der 352→362px, barra color 58→64px, padding GroupBox aumentado. |
 | **I (Tema Claro / Dark-Light Toggle)** | Baja | Media | Agregar botón luna/sol en el header; definir `LIGHT_QSS` en `styles.py` con paleta clara. |
+| **J (Vista HSV incorrecta)** | Media | ✅ Resuelta | Falso color: R=H×(255/179), G=S, B=V — revela distribución de matices, saturación y brillo sin viaje de ida y vuelta. |

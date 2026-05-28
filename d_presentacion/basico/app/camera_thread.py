@@ -119,7 +119,7 @@ class CameraThread(QThread):
                     self.color_confirmed.emit(confirmed_color)
 
                 self.frame_ready.emit(self._annotate_frame(frame, confirmed_color, active_candidate, fps))
-                self.hsv_ready.emit(self._bgr_to_qimage(cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)))
+                self.hsv_ready.emit(self._hsv_false_color(hsv))
                 self.masks_ready.emit(self._build_masks_panel(masks, pixel_counts, confirmed_color))
 
             except Exception as exc:
@@ -174,6 +174,96 @@ class CameraThread(QThread):
         # Sin esto, el buffer Python se libera antes de que el hilo principal
         # acceda a él → crash silencioso (dangling pointer).
         return QImage(rgb.tobytes(), w, h, ch * w, QImage.Format_RGB888).copy()
+
+    def _hsv_false_color(self, hsv: np.ndarray) -> QImage:
+        """
+        Vista de falso color del espacio HSV con overlay de métricas y espectro H.
+
+        Mapeo de canales:
+          R = H escalado [0-179]→[0-255]  — distribución de matices
+          G = S (saturación)               — zonas grises = baja saturación
+          B = V (valor/brillo)             — zonas oscuras = poco brillo
+
+        Overlay:
+          • Info box (esquina superior izq): H/S/V medios del frame
+          • Barra espectro H (parte inferior): rango 0–179 con bandas de
+            los colores configurados (Rojo, Verde, Amarillo) superpuestas
+        """
+        h_ch, s_ch, v_ch = cv2.split(hsv)
+        h_scaled = cv2.convertScaleAbs(h_ch, alpha=255.0 / 179.0)
+        out = cv2.merge([h_scaled, s_ch, v_ch])
+        hh, ww = out.shape[:2]
+        font = cv2.FONT_HERSHEY_SIMPLEX
+
+        # ── Info box: métricas H/S/V medios ──────────────────────────
+        mean_h = int(np.mean(h_ch))
+        mean_s = int(np.mean(s_ch))
+        mean_v = int(np.mean(v_ch))
+
+        overlay = out.copy()
+        cv2.rectangle(overlay, (8, 8), (220, 90), (8, 12, 18), -1)
+        cv2.addWeighted(overlay, 0.70, out, 0.30, 0, out)
+
+        cv2.putText(out, "ESPACIO HSV  /  FALSO COLOR", (14, 24), font, 0.42, (0, 212, 255), 1)
+        cv2.putText(out, f"H medio : {mean_h:3d}  (0-179)", (14, 44), font, 0.40, (200, 100, 100), 1)
+        cv2.putText(out, f"S medio : {mean_s:3d}  (0-255)", (14, 60), font, 0.40, (100, 200, 100), 1)
+        cv2.putText(out, f"V medio : {mean_v:3d}  (0-255)", (14, 76), font, 0.40, (100, 100, 220), 1)
+
+        # ── Barra de espectro H con rangos de calibración ────────────
+        BAR_H   = 28           # altura de la barra
+        BAR_Y   = hh - BAR_H - 4
+        BAR_X0  = 10
+        BAR_X1  = ww - 10
+        BAR_W   = BAR_X1 - BAR_X0
+
+        def h_to_x(h_val: int) -> int:
+            return BAR_X0 + int(h_val / 179 * BAR_W)
+
+        # Fondo de la barra: gradiente de falso color del eje H
+        for x in range(BAR_X0, BAR_X1):
+            h_norm = int((x - BAR_X0) / BAR_W * 179)
+            h_px   = int(h_norm * 255 / 179)
+            cv2.line(out, (x, BAR_Y), (x, BAR_Y + BAR_H - 8), (h_px, 180, 180), 1)
+
+        # Bandas de los rangos configurados (semi-transparentes)
+        ranges_cfg = [
+            ("R", config.HSV_RANGES["rojo_1"]["lower"][0],
+                  config.HSV_RANGES["rojo_1"]["upper"][0], (60, 60, 220)),
+            ("R", config.HSV_RANGES["rojo_2"]["lower"][0],
+                  config.HSV_RANGES["rojo_2"]["upper"][0], (60, 60, 220)),
+            ("V", config.HSV_RANGES["verde"]["lower"][0],
+                  config.HSV_RANGES["verde"]["upper"][0],  (40, 210, 60)),
+            ("A", config.HSV_RANGES["amarillo"]["lower"][0],
+                  config.HSV_RANGES["amarillo"]["upper"][0], (40, 210, 210)),
+        ]
+        bar_overlay = out.copy()
+        for _, lo, hi, color in ranges_cfg:
+            x0 = h_to_x(int(lo))
+            x1 = h_to_x(int(hi))
+            if x1 > x0:
+                cv2.rectangle(bar_overlay, (x0, BAR_Y), (x1, BAR_Y + BAR_H - 8), color, -1)
+        cv2.addWeighted(bar_overlay, 0.45, out, 0.55, 0, out)
+
+        # Marco y etiquetas de la barra
+        cv2.rectangle(out, (BAR_X0, BAR_Y), (BAR_X1, BAR_Y + BAR_H - 8), (50, 65, 80), 1)
+        cv2.putText(out, "H: 0", (BAR_X0, BAR_Y + BAR_H + 2), font, 0.35, (120, 130, 140), 1)
+        cv2.putText(out, "179", (BAR_X1 - 22, BAR_Y + BAR_H + 2), font, 0.35, (120, 130, 140), 1)
+
+        # Marcadores de texto sobre cada rango
+        label_drawn = set()
+        for label, lo, hi, color in ranges_cfg:
+            mid_x = h_to_x((int(lo) + int(hi)) // 2)
+            if label not in label_drawn:
+                cv2.putText(out, label, (mid_x - 4, BAR_Y - 3), font, 0.38, color, 1)
+                label_drawn.add(label)
+
+        # Línea indicadora del H medio actual
+        x_mean = h_to_x(mean_h)
+        cv2.line(out, (x_mean, BAR_Y - 6), (x_mean, BAR_Y + BAR_H - 8), (255, 255, 255), 1)
+        cv2.putText(out, f"{mean_h}", (x_mean + 2, BAR_Y - 8), font, 0.33, (200, 200, 200), 1)
+
+        hh2, ww2, cc = out.shape
+        return QImage(out.tobytes(), ww2, hh2, cc * ww2, QImage.Format_RGB888).copy()
 
     def _build_masks_panel(
         self, masks: dict, pixel_counts: dict, confirmed: str = "ninguno"
