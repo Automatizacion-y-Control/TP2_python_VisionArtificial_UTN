@@ -120,7 +120,7 @@ class CameraThread(QThread):
 
                 self.frame_ready.emit(self._annotate_frame(frame, confirmed_color, active_candidate, fps))
                 self.hsv_ready.emit(self._bgr_to_qimage(cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)))
-                self.masks_ready.emit(self._build_masks_panel(masks, pixel_counts))
+                self.masks_ready.emit(self._build_masks_panel(masks, pixel_counts, confirmed_color))
 
             except Exception as exc:
                 self.error_occurred.emit(str(exc))
@@ -175,25 +175,104 @@ class CameraThread(QThread):
         # acceda a él → crash silencioso (dangling pointer).
         return QImage(rgb.tobytes(), w, h, ch * w, QImage.Format_RGB888).copy()
 
-    def _build_masks_panel(self, masks: dict, pixel_counts: dict) -> QImage:
-        _COLOR_TINTS = {
-            "rojo":     np.array([40, 40, 200], dtype=np.uint8),
-            "verde":    np.array([40, 200, 60], dtype=np.uint8),
-            "amarillo": np.array([40, 200, 200], dtype=np.uint8),
-        }
-        panels = []
-        for color in ("rojo", "verde", "amarillo"):
-            small = cv2.resize(masks[color], (213, 160))
-            panel = np.zeros((160, 213, 3), dtype=np.uint8)
-            # Píxeles activos con tinte de color; fondo muy oscuro
-            panel[small > 0] = _COLOR_TINTS[color]
-            panel[small == 0] = [12, 18, 26]
-            label = f"{color.upper()} {pixel_counts[color]:5d}px"
-            cv2.putText(panel, label, (6, 14), cv2.FONT_HERSHEY_SIMPLEX, 0.37,
-                        tuple(int(x) for x in _COLOR_TINTS[color]), 1)
-            panels.append(panel)
+    def _build_masks_panel(
+        self, masks: dict, pixel_counts: dict, confirmed: str = "ninguno"
+    ) -> QImage:
+        """
+        Genera un panel 2×2 (640×480):
+          ┌──────────┬──────────┐
+          │  ROJO    │  VERDE   │
+          ├──────────┼──────────┤
+          │ AMARILLO │ MÉTRICAS │
+          └──────────┴──────────┘
+        """
+        QW, QH = 320, 240
+        BG   = (12, 18, 26)
+        SEP  = (35, 50, 65)
+        DIM  = (70, 90, 110)
+        font = cv2.FONT_HERSHEY_SIMPLEX
 
-        combined = np.hstack(panels)
+        _TINTS = {
+            "rojo":     (40,  40,  200),
+            "verde":    (40,  200, 60),
+            "amarillo": (40,  200, 200),
+        }
+
+        # ── Cuadrantes de máscara ─────────────────────────────────────
+        quads = []
+        for color in ("rojo", "verde", "amarillo"):
+            tint = _TINTS[color]
+            small = cv2.resize(masks[color], (QW, QH))
+            q = np.full((QH, QW, 3), BG, dtype=np.uint8)
+            q[small > 0] = tint
+            q[small == 0] = BG
+
+            # Barra de proporción de píxeles (parte inferior)
+            total_px = QW * QH
+            fill = min(int(pixel_counts[color] / total_px * (QW - 24)), QW - 24)
+            cv2.rectangle(q, (12, QH - 16), (QW - 12, QH - 8), DIM, 1)
+            if fill > 0:
+                cv2.rectangle(q, (12, QH - 16), (12 + fill, QH - 8), tint, -1)
+
+            # Etiqueta superior
+            label = f"{color.upper()}"
+            px_str = f"{pixel_counts[color]:,} px"
+            active = pixel_counts[color] >= config.FILTER_MIN_PIXELS
+            badge_color = tint if active else DIM
+            cv2.putText(q, label,  (10, 22), font, 0.52, badge_color, 1)
+            cv2.putText(q, px_str, (QW - 100, 22), font, 0.44, badge_color, 1)
+
+            # Indicador de detección activa (círculo pequeño)
+            cv2.circle(q, (QW - 12, 12), 7, tint if active else DIM, -1)
+
+            quads.append(q)
+
+        # ── Cuadrante de métricas (inferior derecho) ─────────────────
+        info = np.full((QH, QW, 3), (10, 16, 24), dtype=np.uint8)
+
+        cv2.putText(info, "DETECTOR  /  METRICAS", (10, 24), font, 0.48, (0, 212, 255), 1)
+        cv2.line(info, (10, 33), (QW - 10, 33), SEP, 1)
+
+        y = 56
+        for color, tint in _TINTS.items():
+            px    = pixel_counts[color]
+            ok    = px >= config.FILTER_MIN_PIXELS
+            c_col = tint if ok else DIM
+            tag   = " OK" if ok else " --"
+            cv2.putText(info, f"{color[:3].upper()}", (12, y),       font, 0.44, c_col, 1)
+            cv2.putText(info, f"{px:>7,} px",        (65, y),        font, 0.44, c_col, 1)
+            cv2.putText(info, tag,                   (QW - 40, y),   font, 0.44, c_col, 1)
+            y += 24
+
+        cv2.line(info, (10, y + 2), (QW - 10, y + 2), SEP, 1)
+        y += 18
+        cv2.putText(info, f"Umbral   : {config.FILTER_MIN_PIXELS:,} px",
+                    (12, y), font, 0.40, DIM, 1)
+        y += 18
+        cv2.putText(info, f"Estab.   : {config.FILTER_STABILITY_FRAMES} frames",
+                    (12, y), font, 0.40, DIM, 1)
+
+        cv2.line(info, (10, QH - 56), (QW - 10, QH - 56), SEP, 1)
+
+        # Color estable confirmado
+        meta = config.COLOR_METADATA.get(confirmed, config.COLOR_METADATA["ninguno"])
+        conf_bgr = meta["color_bgr"]
+        cv2.putText(info, "ESTABLE:", (12, QH - 36), font, 0.44, DIM, 1)
+        cv2.putText(info, meta["label"], (85, QH - 36), font, 0.52, conf_bgr, 2)
+        cv2.circle(info, (QW - 22, QH - 42), 17, (8, 14, 22), -1)
+        cv2.circle(info, (QW - 22, QH - 42), 15, conf_bgr, -1)
+
+        quads.append(info)
+
+        # ── Ensamblar 2×2 ─────────────────────────────────────────────
+        top    = np.hstack([quads[0], quads[1]])   # rojo  | verde
+        bottom = np.hstack([quads[2], quads[3]])   # amari | info
+        combined = np.vstack([top, bottom])
+
+        # Líneas separadoras de cuadrantes
+        cv2.line(combined, (QW, 0),   (QW, QH * 2), SEP, 1)
+        cv2.line(combined, (0,  QH),  (QW * 2, QH), SEP, 1)
+
         rgb = cv2.cvtColor(combined, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb.shape
         return QImage(rgb.tobytes(), w, h, ch * w, QImage.Format_RGB888).copy()

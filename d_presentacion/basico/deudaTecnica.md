@@ -26,13 +26,44 @@ Este documento registra los atajos, simplificaciones y compromisos de diseño as
 * **Impacto:** A altas resoluciones, el envío continuo de imágenes grandes por el sistema de señales puede elevar el uso de CPU.
 * **Mitigación:** Redimensionar el frame procesado a `640x480` antes de convertirlo a formato `QImage` para el dibujado en el widget.
 
+### E. Tamaño de Fuente de la Interfaz
+* **Descripción:** El tamaño de fuente base de los widgets (labels, botones, sliders) fue fijado en 12px durante el diseño inicial sin ajuste fino sobre hardware real.
+* **Impacto:** En pantallas de escritorio con resolución estándar (1080p) la interfaz puede resultar de lectura incómoda, especialmente en la terminal de log y el calibrador HSV.
+* **Mitigación:** Incrementar progresivamente en pasos de 0.5–1 punto (12 → 12.5 → 13...) el tamaño de fuente base en `styles.py` hasta que el usuario valide la legibilidad. Mantener coherencia entre los distintos componentes (header, grupos, terminal, badges).
+
+### F. Distribución de la Vista de Máscaras
+* **Descripción:** La pestaña "MÁSCARAS" divide la pantalla en 3 paneles horizontales iguales (213px cada uno), lo que deja poco espacio de detalle por color y no aprovecha el área sobrante para información contextual.
+* **Impacto:** Las máscaras se ven pequeñas y no hay espacio para mostrar datos adicionales (umbral activo, píxeles en tiempo real, estado del filtro) junto a cada máscara.
+* **Mitigación:** Rediseñar la vista de máscaras exclusivamente en `camera_thread.py` (`_build_masks_panel`) y el QLabel de destino: dividir el área en **4 cuadrantes** (2×2) — los 3 superiores para cada color (más grandes) y el cuadrante inferior derecho para un panel de métricas con pixeles activos, umbral configurado y estado de detección.
+
+### G. Modo de Comportamiento de la Salida LED (Persistencia vs. Pulso)
+* **Descripción:** El comportamiento actual de la actuación LED es de tipo "pulso": al detectar un color se envía el comando y el LED se apaga luego de un tiempo `t` definido por el timeout del firmware del ESP32 (~2 segundos). No hay forma de elegir el modo desde la UI.
+* **Impacto:** Para ciertos casos de uso es deseable que el LED **siga la detección en tiempo real** (se mantiene encendido mientras el color persiste, y se apaga inmediatamente al detectar "NINGUNO"), en lugar de pulsos de duración fija.
+* **Mitigación:** Agregar un selector de modo en el panel izquierdo ("Modo LED"): `Pulso (timeout firmware)` vs. `Continuo (sigue detección)`. En modo continuo, el heartbeat del `QTimer` de 1 segundo enviaría el color confirmado activo en cada tick, manteniendo el LED activo mientras la detección persista.
+
+### I. Tema Claro — Dark/Light Toggle (Luna/Sol)
+* **Descripción:** La aplicación solo cuenta con el tema oscuro industrial definido en `styles.py` (`DARK_QSS`). No existe un tema claro alternativo ni un mecanismo para switchear entre ambos en tiempo de ejecución.
+* **Impacto:** En entornos con buena iluminación ambiente (laboratorio con luz natural, proyector) el tema oscuro puede dificultar la lectura. Un tema claro tipo panel de control diurno mejora la usabilidad en esos contextos.
+* **Referencia de paleta:** La paleta del modo claro debe inspirarse en la interfaz del Antigravity IDE (fondo blanco/gris muy claro, texto oscuro, acento azul profesional), manteniendo la misma estructura de layout y componentes — solo cambia la hoja de estilos QSS aplicada.
+* **Mitigación:** Definir `LIGHT_QSS` en `styles.py` con paleta clara (fondo `#F0F2F5`, paneles `#FFFFFF`, acento `#0078D4`, texto `#1E1E2E`). Agregar en el header de `main_window.py` un `QPushButton` con icono 🌙/☀️ que llame a `app.setStyleSheet()` en el toggle. El estado del tema debe persistir en `calibration.json`.
+
+### H. Proporciones y Armonía Visual del Layout (Header, Asides, Footer)
+* **Descripción:** El header, los paneles laterales (izquierdo y derecho) y la barra de log inferior tienen alturas y márgenes que no fueron ajustados con referencia a contenido real. Con la app corriendo se observan espacios no aprovechados y proporciones que pueden mejorarse.
+* **Impacto:** La interfaz funciona correctamente pero no tiene la armonía visual de un panel industrial de referencia. Los márgenes del header son generosos en relación al resto, y el footer de log podría ganar altura o el header reducirse levemente.
+* **Mitigación:** Revisar y ajustar en `main_window.py`: altura del header (56px → evaluar 50px), altura del log terminal (108px → evaluar 120px para mejor legibilidad), y márgenes internos de los `QGroupBox` laterales para lograr un ritmo visual consistente entre todas las secciones.
+
 ---
 
 ## 2. Plan de Refactorización y Mitigación
 
-| ID Deuda | Gravedad | Sprint de Resolución | Acción a Tomar |
+| ID Deuda | Gravedad | Prioridad | Acción a Tomar |
 | :--- | :---: | :---: | :--- |
-| **A (Serial Mock)** | Baja | Sprint 1 / Constante | Logs claros en pantalla indicando si los datos son simulados o físicos. |
-| **B (Selección de Cámara)** | Media | Sprint 2 | Añadir selector dinámico de cámaras en el panel de herramientas. |
-| **C (Validación de JSON)** | Baja | Sprint 3 | Bloque try-except con validación de tipos al cargar el archivo de configuración. |
-| **D (Rendimiento QThread)** | Media | Sprint 2 | Procesar frames en baja resolución para la visualización en la app. |
+| **A (Serial Mock)** | Baja | Baja | Logs claros en pantalla indicando si los datos son simulados o físicos. |
+| **B (Selección de Cámara)** | Media | ✅ Resuelta | Combobox dinámico implementado desde Sprint 1. |
+| **C (Validación de JSON)** | Baja | Baja | Bloque try-except con validación de tipos implementado en `config.py`. |
+| **D (Rendimiento QThread)** | Media | ✅ Resuelta | Frames redimensionados a 640×480 antes de conversión a QImage. |
+| **E (Tamaño de Fuente)** | Baja | Media | Incrementar en pasos de 0.5–1pt en `styles.py` hasta validación del usuario. |
+| **F (Vista de Máscaras 4 cuadrantes)** | Media | ✅ Resuelta | Panel 2×2 (640×480): 3 cuadrantes de máscara + cuadrante de métricas (px, umbral, estabilidad, color estable). |
+| **G (Modo LED Pulso vs. Continuo)** | Media | ✅ Resuelta | Grupo "MODO LED" en panel izquierdo con botones ⚡ PULSO / ◎ CONTINUO. Heartbeat reenvía color activo cada 1s en modo continuo. |
+| **H (Armonía Visual Layout)** | Baja | Media | Ajuste fino de alturas y márgenes en `main_window.py` y `styles.py`. |
+| **I (Tema Claro / Dark-Light Toggle)** | Baja | Media | Agregar botón luna/sol en el header; definir `LIGHT_QSS` en `styles.py` con paleta clara. |
