@@ -396,6 +396,34 @@ QComboBox QAbstractItemView {{
 }}
 
 /* ══════════════════════════════════════════════════════════════════════
+   MODO LED — control segmentado Pulso / Continuo
+══════════════════════════════════════════════════════════════════════ */
+QPushButton#btn_led_mode {{
+    background-color: {C["bg_card"]};
+    color: {C["text_sec"]};
+    border: 1px solid {C["border"]};
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 5px 6px;
+    letter-spacing: 0.5px;
+}}
+QPushButton#btn_led_mode:hover {{
+    background-color: {C["hover"]};
+    color: {C["text_pri"]};
+    border-color: {C["border_hi"]};
+}}
+QPushButton#btn_led_mode[active="true"] {{
+    background-color: {C["accent_dark"]};
+    color: {C["accent"]};
+    border: 1px solid {C["accent_dim"]};
+}}
+QPushButton#btn_led_mode[active="true"]:hover {{
+    background-color: #004A5C;
+    border-color: {C["accent"]};
+}}
+
+/* ══════════════════════════════════════════════════════════════════════
    SLIDERS
 ══════════════════════════════════════════════════════════════════════ */
 QSlider::groove:horizontal {{

@@ -93,6 +93,8 @@ class MainWindow(QMainWindow):
         self._session_start: float = time.time()
         self._detection_counts: dict = {"rojo": 0, "verde": 0, "amarillo": 0}
         self._last_fps: float = 0.0
+        self._led_mode: str = "pulso"          # "pulso" | "continuo"
+        self._current_confirmed: str = "ninguno"  # último color estable confirmado
 
         # Componentes core
         self._camera = CameraThread(self)
@@ -203,6 +205,7 @@ class MainWindow(QMainWindow):
 
         lay.addWidget(self._build_connection_group())
         lay.addWidget(self._build_manual_test_group())
+        lay.addWidget(self._build_led_mode_group())
         lay.addWidget(self._build_phase2_group())
         lay.addStretch()
 
@@ -301,6 +304,63 @@ class MainWindow(QMainWindow):
         grid.addLayout(right_col)
         lay.addWidget(grid_widget)
         return gb
+
+    def _build_led_mode_group(self) -> QGroupBox:
+        gb = QGroupBox("MODO LED")
+        lay = QVBoxLayout(gb)
+        lay.setSpacing(6)
+
+        lay.addWidget(self._section_label("Comportamiento de salida"))
+
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(6)
+
+        self.btn_mode_pulso = QPushButton("⚡  PULSO")
+        self.btn_mode_pulso.setObjectName("btn_led_mode")
+        self.btn_mode_pulso.setProperty("active", "true")
+        self.btn_mode_pulso.setToolTip(
+            "Envía el comando al detectar un cambio.\n"
+            "El LED se apaga por timeout del firmware (~2s)."
+        )
+        self.btn_mode_pulso.clicked.connect(lambda: self._set_led_mode("pulso"))
+
+        self.btn_mode_continuo = QPushButton("◎  CONTINUO")
+        self.btn_mode_continuo.setObjectName("btn_led_mode")
+        self.btn_mode_continuo.setProperty("active", "false")
+        self.btn_mode_continuo.setToolTip(
+            "Envía el comando al detectar Y lo repite cada 1s.\n"
+            "El LED sigue la detección en tiempo real."
+        )
+        self.btn_mode_continuo.clicked.connect(lambda: self._set_led_mode("continuo"))
+
+        btn_row.addWidget(self.btn_mode_pulso)
+        btn_row.addWidget(self.btn_mode_continuo)
+        lay.addLayout(btn_row)
+
+        self.lbl_led_mode_desc = QLabel(
+            "LED activa al detectar;\nse apaga por timeout del firmware."
+        )
+        self.lbl_led_mode_desc.setObjectName("lbl_section")
+        self.lbl_led_mode_desc.setWordWrap(True)
+        lay.addWidget(self.lbl_led_mode_desc)
+
+        return gb
+
+    def _set_led_mode(self, mode: str) -> None:
+        self._led_mode = mode
+        _descs = {
+            "pulso":    "LED activa al detectar;\nse apaga por timeout del firmware.",
+            "continuo": "LED sigue la detección en tiempo real;\nheartbeat cada 1s mantiene el estado.",
+        }
+        self.lbl_led_mode_desc.setText(_descs[mode])
+        for btn, btn_mode in [
+            (self.btn_mode_pulso,    "pulso"),
+            (self.btn_mode_continuo, "continuo"),
+        ]:
+            btn.setProperty("active", "true" if btn_mode == mode else "false")
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+        self._log("INFO", f"Modo LED → {mode.upper()}")
 
     def _build_phase2_group(self) -> QGroupBox:
         gb = QGroupBox("CONTROL RGB  —  FASE 2")
@@ -746,6 +806,9 @@ class MainWindow(QMainWindow):
         confirmed = stats.get("confirmed", "ninguno")
         candidate = stats.get("candidate", "ninguno")
 
+        # Mantener el último color confirmado para el heartbeat en modo continuo
+        self._current_confirmed = confirmed
+
         self.lbl_fps_badge.setText(f"FPS: {fps:5.1f}")
         self.lbl_candidate_badge.setText(f"candidato: {candidate.upper()}")
 
@@ -1042,10 +1105,14 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------ #
 
     def _on_heartbeat(self) -> None:
-        if self._link_active and self._serial.is_connected:
-            return  # Los comandos ya se envían en _on_color_confirmed
-        if self._serial.is_connected:
-            pass  # El heartbeat mantiene vivo al ESP32 en modo manual (opcional)
+        if not self._link_active or not self._serial.is_connected:
+            return
+        # Modo CONTINUO: reenvía el color actual cada tick para mantener el LED activo.
+        # Modo PULSO: el envío diferencial de _on_color_confirmed es suficiente.
+        if self._led_mode == "continuo":
+            log_msg = self._serial.send_color(self._current_confirmed)
+            mode_prefix = "MOCK" if self._serial.is_mock else self._serial.port
+            self._log("TX", f"[{mode_prefix}] ♻ {log_msg}")
 
     def _on_blink_tick(self) -> None:
         self._blink_state = not self._blink_state
