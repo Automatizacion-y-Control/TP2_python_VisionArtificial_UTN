@@ -71,5 +71,5 @@ Este documento registra los atajos, simplificaciones y compromisos de diseño as
 | **F (Vista de Máscaras 4 cuadrantes)** | Media | ✅ Resuelta | Panel 2×2 (640×480): 3 cuadrantes de máscara + cuadrante de métricas (px, umbral, estabilidad, color estable). |
 | **G (Modo LED Pulso vs. Continuo)** | Media | ✅ Resuelta | Grupo "MODO LED" en panel izquierdo con botones ⚡ PULSO / ◎ CONTINUO. Heartbeat reenvía color activo cada 1s en modo continuo. |
 | **H (Armonía Visual Layout)** | Baja | ✅ Resuelta | Header 56→58px, log 108→120px, paneles izq 252→265px / der 352→362px, barra color 58→64px, padding GroupBox aumentado. |
-| **I (Tema Claro / Dark-Light Toggle)** | Baja | Media | Agregar botón luna/sol en el header; definir `LIGHT_QSS` en `styles.py` con paleta clara. |
+| **I (Tema Claro / Dark-Light Toggle)** | Baja | ✅ Resuelta | Botón ☀/🌙 en header; `LIGHT_QSS` + `LC` en `styles.py`; `get_qss(theme)` y `get_accent(theme)` como helpers. |
 | **J (Vista HSV incorrecta)** | Media | ✅ Resuelta | Falso color: R=H×(255/179), G=S, B=V — revela distribución de matices, saturación y brillo sin viaje de ida y vuelta. |

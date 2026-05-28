@@ -12,6 +12,8 @@ from datetime import datetime
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QPixmap
 from PyQt5.QtWidgets import (
+    QApplication,
+    QComboBox,
     QFrame,
     QGraphicsDropShadowEffect,
     QGroupBox,
@@ -28,7 +30,6 @@ from PyQt5.QtWidgets import (
     QTabWidget,
     QVBoxLayout,
     QWidget,
-    QComboBox,
 )
 
 import config
@@ -94,6 +95,7 @@ class MainWindow(QMainWindow):
         self._last_fps: float = 0.0
         self._led_mode: str = "pulso"          # "pulso" | "continuo"
         self._current_confirmed: str = "ninguno"  # último color estable confirmado
+        self._theme: str = "dark"              # "dark" | "light"
 
         # Componentes core
         self._camera = CameraThread(self)
@@ -173,6 +175,19 @@ class MainWindow(QMainWindow):
         sep.setFrameShape(QFrame.VLine)
         sep.setFixedHeight(28)
         lay.addWidget(sep)
+
+        # Toggle tema claro/oscuro
+        self.btn_theme = QPushButton("☀")
+        self.btn_theme.setObjectName("btn_theme")
+        self.btn_theme.setFixedSize(34, 34)
+        self.btn_theme.setToolTip("Cambiar a modo claro / oscuro")
+        self.btn_theme.clicked.connect(self._toggle_theme)
+        lay.addWidget(self.btn_theme)
+
+        sep2 = QFrame()
+        sep2.setFrameShape(QFrame.VLine)
+        sep2.setFixedHeight(28)
+        lay.addWidget(sep2)
 
         # Botón LINK MODE
         self.btn_link = QPushButton("▶  LINK MODE")
@@ -1101,6 +1116,15 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------ #
     # Timers
     # ------------------------------------------------------------------ #
+
+    def _toggle_theme(self) -> None:
+        self._theme = "light" if self._theme == "dark" else "dark"
+        QApplication.instance().setStyleSheet(styles.get_qss(self._theme))
+        # Actualizar icono del botón
+        self.btn_theme.setText("🌙" if self._theme == "light" else "☀")
+        # Actualizar color del efecto de brillo del botón LINK
+        self._link_btn_effect.setColor(QColor(styles.get_accent(self._theme)))
+        self._log("INFO", f"Tema → {'CLARO ☀' if self._theme == 'light' else 'OSCURO 🌙'}")
 
     def _on_heartbeat(self) -> None:
         if not self._link_active or not self._serial.is_connected:
