@@ -9,6 +9,7 @@
 ---
 
 ![Version](https://img.shields.io/badge/Release-v1.0.0-brightgreen?style=for-the-badge)
+[![Repositorio](https://img.shields.io/badge/GitHub-Automatizacion--y--Control-181717?style=for-the-badge&logo=github)](https://github.com/Automatizacion-y-Control/TP2_python_VisionArtificial_UTN.git)
 ![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)
 ![PyQt5](https://img.shields.io/badge/PyQt5-5.15-41CD52?style=for-the-badge&logo=qt)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.13-green?style=for-the-badge&logo=opencv)
@@ -29,6 +30,10 @@
 ## 420581
 
 ---
+
+### Docentes
+## Ing. González, Hernando Alexis
+## Ing. Miklosa, Pablo
 
 ### Año Lectivo
 ## 2026
@@ -142,6 +147,14 @@ TP2/
 
 ---
 
+## Repositorio
+
+```
+https://github.com/Automatizacion-y-Control/TP2_python_VisionArtificial_UTN.git
+```
+
+---
+
 ## Instalación y ejecución
 
 ### Requisitos
@@ -219,4 +232,5 @@ py main.py
 Universidad Tecnológica Nacional — Facultad Regional Córdoba
 Licenciatura en Automatización y Control
 Materia: Introducción a la Visión Artificial
+Docentes: Ing. González, Hernando Alexis · Ing. Miklosa, Pablo
 Autor: Cristian Gonzalo Vera · Legajo: 420581
