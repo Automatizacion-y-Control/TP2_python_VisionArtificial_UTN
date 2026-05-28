@@ -10,7 +10,7 @@ El objetivo principal es comprender los fundamentos de segmentación por color u
 
 # Contenido
 
-## 1. [Analisis_RGB_vs_HSV.md](file:///d:/UTN/Licenciaturas/Automatizacion%20y%20Control/Nivel%202/1er%20Cuatrimestre/7%20Introduccion%20a%20la%20vision%20artificial/3%20Entregas/TP2/b_investigacion/Analisis_RGB_vs_HSV.md)
+## 1. [Analisis_RGB_vs_HSV.md](./Analisis_RGB_vs_HSV.md)
 
 Documento teórico que desarrolla:
 
@@ -22,7 +22,7 @@ Documento teórico que desarrolla:
 
 ---
 
-## 2. [Rangos_HSV.md](file:///d:/UTN/Licenciaturas/Automatizacion%20y%20Control/Nivel%202/1er%20Cuatrimestre/7%20Introduccion%20a%20la%20vision%20artificial/3%20Entregas/TP2/b_investigacion/Rangos_HSV.md)
+## 2. [Rangos_HSV.md](./Rangos_HSV.md)
 
 Documento de calibración inicial de colores.
 
@@ -41,7 +41,7 @@ Incluye:
 
 ---
 
-## 3. [Diagrama_Flujo_Sistema.md](file:///d:/UTN/Licenciaturas/Automatizacion%20y%20Control/Nivel%202/1er%20Cuatrimestre/7%20Introduccion%20a%20la%20vision%20artificial/3%20Entregas/TP2/b_investigacion/Diagrama_Flujo_Sistema.md)
+## 3. [Diagrama_Flujo_Sistema.md](./Diagrama_Flujo_Sistema.md)
 
 Diseño lógico básico del sistema.
 
