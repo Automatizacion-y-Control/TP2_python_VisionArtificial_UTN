@@ -62,8 +62,8 @@ Este documento registra los atajos, simplificaciones y compromisos de diseño as
 | **B (Selección de Cámara)** | Media | ✅ Resuelta | Combobox dinámico implementado desde Sprint 1. |
 | **C (Validación de JSON)** | Baja | Baja | Bloque try-except con validación de tipos implementado en `config.py`. |
 | **D (Rendimiento QThread)** | Media | ✅ Resuelta | Frames redimensionados a 640×480 antes de conversión a QImage. |
-| **E (Tamaño de Fuente)** | Baja | Media | Incrementar en pasos de 0.5–1pt en `styles.py` hasta validación del usuario. |
+| **E (Tamaño de Fuente)** | Baja | ✅ Resuelta | +1pt en toda la jerarquía: base 12→13px, secciones 10→11px, botones/combos 11→12px, título 15→16px. Pendiente validación del usuario. |
 | **F (Vista de Máscaras 4 cuadrantes)** | Media | ✅ Resuelta | Panel 2×2 (640×480): 3 cuadrantes de máscara + cuadrante de métricas (px, umbral, estabilidad, color estable). |
 | **G (Modo LED Pulso vs. Continuo)** | Media | ✅ Resuelta | Grupo "MODO LED" en panel izquierdo con botones ⚡ PULSO / ◎ CONTINUO. Heartbeat reenvía color activo cada 1s en modo continuo. |
-| **H (Armonía Visual Layout)** | Baja | Media | Ajuste fino de alturas y márgenes en `main_window.py` y `styles.py`. |
+| **H (Armonía Visual Layout)** | Baja | ✅ Resuelta | Header 56→58px, log 108→120px, paneles izq 252→265px / der 352→362px, barra color 58→64px, padding GroupBox aumentado. |
 | **I (Tema Claro / Dark-Light Toggle)** | Baja | Media | Agregar botón luna/sol en el header; definir `LIGHT_QSS` en `styles.py` con paleta clara. |

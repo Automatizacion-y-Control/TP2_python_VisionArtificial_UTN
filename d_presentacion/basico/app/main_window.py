@@ -9,9 +9,8 @@ import os
 import time
 from datetime import datetime
 
-import numpy as np
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QColor, QFont, QPixmap
+from PyQt5.QtGui import QColor, QPixmap
 from PyQt5.QtWidgets import (
     QFrame,
     QGraphicsDropShadowEffect,
@@ -83,8 +82,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TP2 — Visión Artificial y Control de Color  |  UTN FRC")
-        self.setMinimumSize(1150, 740)
-        self.resize(1280, 800)
+        self.setMinimumSize(1170, 750)
+        self.resize(1300, 820)
 
         # Estado interno
         self._link_active: bool = False
@@ -131,7 +130,7 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self._build_left_panel())
         splitter.addWidget(self._build_center_panel())
         splitter.addWidget(self._build_right_panel())
-        splitter.setSizes([240, 680, 340])
+        splitter.setSizes([265, 640, 362])
         splitter.setCollapsible(0, False)
         splitter.setCollapsible(1, False)
         splitter.setCollapsible(2, False)
@@ -144,7 +143,7 @@ class MainWindow(QMainWindow):
     def _build_header(self) -> QWidget:
         w = QWidget()
         w.setObjectName("w_header")
-        w.setFixedHeight(56)
+        w.setFixedHeight(58)
         lay = QHBoxLayout(w)
         lay.setContentsMargins(16, 0, 16, 0)
         lay.setSpacing(12)
@@ -196,7 +195,7 @@ class MainWindow(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setFixedWidth(252)
+        scroll.setFixedWidth(265)
 
         content = QWidget()
         lay = QVBoxLayout(content)
@@ -470,7 +469,7 @@ class MainWindow(QMainWindow):
         # Barra de color estable
         color_bar = QWidget()
         color_bar.setObjectName("w_color_bar")
-        color_bar.setFixedHeight(58)
+        color_bar.setFixedHeight(64)
         bar_lay = QHBoxLayout(color_bar)
         bar_lay.setContentsMargins(16, 4, 16, 4)
 
@@ -505,7 +504,7 @@ class MainWindow(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setFixedWidth(352)
+        scroll.setFixedWidth(362)
 
         content = QWidget()
         lay = QVBoxLayout(content)
@@ -602,7 +601,7 @@ class MainWindow(QMainWindow):
             row = QHBoxLayout()
             row.setSpacing(6)
             lbl = QLabel(label_txt)
-            lbl.setFixedWidth(72)
+            lbl.setFixedWidth(80)
             lbl.setObjectName("lbl_section")
             lbl.setToolTip(tip)
 
@@ -750,14 +749,14 @@ class MainWindow(QMainWindow):
 
     def _build_log_panel(self) -> QWidget:
         w = QWidget()
-        w.setFixedHeight(108)
+        w.setFixedHeight(120)
         lay = QHBoxLayout(w)
         lay.setContentsMargins(8, 4, 8, 6)
         lay.setSpacing(6)
 
         icon_lbl = QLabel("TERMINAL")
         icon_lbl.setObjectName("lbl_section")
-        icon_lbl.setFixedWidth(60)
+        icon_lbl.setFixedWidth(70)
         icon_lbl.setAlignment(Qt.AlignTop)
 
         self.log_terminal = QPlainTextEdit()
@@ -825,7 +824,6 @@ class MainWindow(QMainWindow):
         # Envío automático si Link Mode activo
         if self._link_active and self._serial.is_connected:
             log_msg = self._serial.send_color(color)
-            meta = config.COLOR_METADATA.get(color, config.COLOR_METADATA["ninguno"])
             mode_prefix = "MOCK" if self._serial.is_mock else self._serial.port
             self._log("TX", f"[{mode_prefix}] {log_msg}")
 
@@ -1157,7 +1155,7 @@ class MainWindow(QMainWindow):
             f"background-color: rgb({r},{g},{b}); border-radius: 4px; border: 1px solid #3A3A3A;"
         )
 
-    def _make_rgb_slider(self, label: str, color: str):
+    def _make_rgb_slider(self, _label: str, _color: str):
         sl = QSlider(Qt.Horizontal)
         sl.setRange(0, 255)
         sl.setValue(0)

@@ -34,7 +34,7 @@ QMainWindow, QWidget {{
     background-color: {C["bg_base"]};
     color: {C["text_pri"]};
     font-family: "Segoe UI", Arial, sans-serif;
-    font-size: 12px;
+    font-size: 13px;
 }}
 QWidget#w_header {{
     background-color: {C["bg_panel"]};
@@ -83,10 +83,10 @@ QGroupBox {{
     border: 1px solid {C["border"]};
     border-radius: 6px;
     margin-top: 16px;
-    padding: 10px 8px 8px 8px;
+    padding: 12px 10px 10px 10px;
     font-weight: bold;
     color: {C["accent"]};
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 1.5px;
 }}
 QGroupBox::title {{
@@ -106,18 +106,18 @@ QLabel {{
     background-color: transparent;
 }}
 QLabel#lbl_app_title {{
-    font-size: 15px;
+    font-size: 16px;
     font-weight: bold;
     color: {C["accent"]};
     letter-spacing: 2px;
 }}
 QLabel#lbl_app_subtitle {{
-    font-size: 10px;
+    font-size: 11px;
     color: {C["text_sec"]};
     letter-spacing: 1px;
 }}
 QLabel#lbl_section {{
-    font-size: 10px;
+    font-size: 11px;
     font-weight: bold;
     color: {C["text_sec"]};
     letter-spacing: 1.5px;
@@ -130,7 +130,7 @@ QLabel#lbl_color_big {{
     padding: 4px 12px;
 }}
 QLabel#lbl_fps_badge {{
-    font-size: 11px;
+    font-size: 12px;
     color: {C["accent"]};
     font-family: "Consolas", monospace;
     padding: 2px 8px;
@@ -149,7 +149,7 @@ QLabel#lbl_video_placeholder {{
 QLabel#lbl_slider_val {{
     color: {C["accent"]};
     font-family: "Consolas", monospace;
-    font-size: 11px;
+    font-size: 12px;
     min-width: 28px;
     qproperty-alignment: AlignRight;
 }}
@@ -160,7 +160,7 @@ QLabel#lbl_stat_count {{
     qproperty-alignment: AlignCenter;
 }}
 QLabel#lbl_stat_label {{
-    font-size: 10px;
+    font-size: 11px;
     color: {C["text_sec"]};
     letter-spacing: 1px;
     qproperty-alignment: AlignCenter;
@@ -175,7 +175,7 @@ QPushButton {{
     border: 1px solid {C["border"]};
     border-radius: 5px;
     padding: 6px 14px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: bold;
     letter-spacing: 0.5px;
 }}
@@ -200,7 +200,7 @@ QPushButton#btn_link {{
     color: {C["accent"]};
     border: 2px solid {C["accent_dim"]};
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: bold;
     padding: 7px 22px;
     letter-spacing: 2px;
@@ -263,7 +263,7 @@ QPushButton#btn_scan {{
     background-color: {C["bg_card"]};
     color: {C["text_sec"]};
     border: 1px solid {C["border"]};
-    font-size: 10px;
+    font-size: 11px;
     padding: 4px 10px;
 }}
 QPushButton#btn_scan:hover {{
@@ -335,7 +335,7 @@ QPushButton#btn_save {{
     border: 1px solid {C["accent_dim"]};
     letter-spacing: 1px;
     padding: 6px 10px;
-    font-size: 11px;
+    font-size: 12px;
 }}
 QPushButton#btn_save:hover {{ background-color: {C["accent_dark"]}; border-color: {C["accent"]}; }}
 
@@ -345,7 +345,7 @@ QPushButton#btn_load {{
     border: 1px solid {C["border"]};
     letter-spacing: 1px;
     padding: 6px 10px;
-    font-size: 11px;
+    font-size: 12px;
 }}
 QPushButton#btn_load:hover {{ color: {C["accent"]}; border-color: {C["accent_dim"]}; }}
 
@@ -355,7 +355,7 @@ QPushButton#btn_export {{
     border: 1px solid {C["border"]};
     letter-spacing: 1px;
     padding: 6px 10px;
-    font-size: 11px;
+    font-size: 12px;
 }}
 QPushButton#btn_export:hover {{ color: {C["warning"]}; border-color: #6A5000; }}
 
@@ -368,7 +368,7 @@ QComboBox {{
     border: 1px solid {C["border"]};
     border-radius: 4px;
     padding: 4px 8px;
-    font-size: 11px;
+    font-size: 12px;
     min-height: 24px;
     selection-background-color: {C["accent_dim"]};
 }}
@@ -403,7 +403,7 @@ QPushButton#btn_led_mode {{
     color: {C["text_sec"]};
     border: 1px solid {C["border"]};
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: bold;
     padding: 5px 6px;
     letter-spacing: 0.5px;
@@ -472,7 +472,7 @@ QTabBar::tab {{
     margin-right: 2px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: bold;
     letter-spacing: 1px;
     min-width: 60px;
@@ -496,7 +496,7 @@ QPlainTextEdit#log_terminal {{
     border: 1px solid {C["border"]};
     border-radius: 4px;
     font-family: "Consolas", "Courier New", monospace;
-    font-size: 11px;
+    font-size: 12px;
     padding: 4px 6px;
     selection-background-color: {C["accent_dim"]};
 }}
