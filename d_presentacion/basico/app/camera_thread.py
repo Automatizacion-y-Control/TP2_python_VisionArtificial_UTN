@@ -170,7 +170,10 @@ class CameraThread(QThread):
     def _bgr_to_qimage(self, bgr: np.ndarray) -> QImage:
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb.shape
-        return QImage(rgb.tobytes(), w, h, ch * w, QImage.Format_RGB888)
+        # .copy() fuerza a QImage a copiar los bytes internamente.
+        # Sin esto, el buffer Python se libera antes de que el hilo principal
+        # acceda a él → crash silencioso (dangling pointer).
+        return QImage(rgb.tobytes(), w, h, ch * w, QImage.Format_RGB888).copy()
 
     def _build_masks_panel(self, masks: dict, pixel_counts: dict) -> QImage:
         _COLOR_TINTS = {
@@ -193,4 +196,4 @@ class CameraThread(QThread):
         combined = np.hstack(panels)
         rgb = cv2.cvtColor(combined, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb.shape
-        return QImage(rgb.tobytes(), w, h, ch * w, QImage.Format_RGB888)
+        return QImage(rgb.tobytes(), w, h, ch * w, QImage.Format_RGB888).copy()
