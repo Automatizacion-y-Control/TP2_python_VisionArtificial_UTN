@@ -1,0 +1,7 @@
+# TP2 — Panel de Control Industrial
+# Instalar con: pip install -r requirements.txt
+
+PyQt5>=5.15.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+pyserial>=3.5
