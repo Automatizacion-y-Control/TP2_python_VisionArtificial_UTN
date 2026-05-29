@@ -45,6 +45,20 @@
 
 ---
 
+## Demo
+
+<div align="center">
+
+[![Ver video de presentación en Google Drive](d_presentacion/assets/app_preview.png)](https://drive.google.com/file/d/108ZY2XdcY7Dt4YLFOfAnQUY7vQFLxRDd/view?usp=drive_link)
+
+▶ **[Ver video de presentación — Google Drive](https://drive.google.com/file/d/108ZY2XdcY7Dt4YLFOfAnQUY7vQFLxRDd/view?usp=drive_link)**
+
+</div>
+
+> Guardá el screenshot de la aplicación como `d_presentacion/assets/app_preview.png` para que la imagen se muestre en este README.
+
+---
+
 ## Descripción general
 
 Sistema de visión artificial que detecta colores en tiempo real mediante procesamiento digital de imágenes (OpenCV + espacio HSV) y actúa físicamente sobre un LED RGB direccionable WS2812B conectado a un microcontrolador ESP32-C3, todo orquestado desde un **panel de control industrial** desarrollado en PyQt5.
